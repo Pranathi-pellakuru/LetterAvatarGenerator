@@ -101,3 +101,5 @@ imageView.setImageDrawable(
         )
 ```
 
+## Reference 
+https://github.com/AmosKorir/AvatarImageGenerator
