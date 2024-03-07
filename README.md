@@ -38,7 +38,7 @@ val image = AvatarCreator(this).setLetter('U')
     .build()
 ```
 
-To customize colors 
+### To customize colors 
 
 **If you have color pairs**
 
@@ -62,6 +62,18 @@ val image1 = AvatarCreator(this).setLetter('P')
     .setBackgroundColor(randomColors.getBackgroundColor())
     .build()
 
+```
+
+### To customize font
+
+use the function setFont(typeface:Typeface) to which you can pass the font in your resource folder as below
+```kotlin
+val image = AvatarCreator(this)
+            .setLetter('P')
+            .setLetterColor(randomColors.getLetterColor())
+            .setFont(this.resources.getFont(R.font.micro_extend_flf_bold))
+            .setBackgroundColor(randomColors.getBackgroundColor())
+            .build()
 ```
 
 ## Displaying the generated bitmap

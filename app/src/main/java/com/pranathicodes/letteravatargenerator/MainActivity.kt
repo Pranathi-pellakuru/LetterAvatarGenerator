@@ -23,8 +23,10 @@ class MainActivity : ComponentActivity() {
         val randomColors = RandomColors()
         randomColors.setLetterColors(listOf(Color.WHITE, Color.MAGENTA, Color.GRAY))
         randomColors.setBackgroundColors(listOf(Color.CYAN, Color.RED, Color.BLACK))
-        val image = AvatarCreator(this).setLetter('P')
+        val image = AvatarCreator(this)
+            .setLetter('P')
             .setLetterColor(randomColors.getLetterColor())
+            .setFont(this.resources.getFont(R.font.micro_extend_flf_bold))
             .setBackgroundColor(randomColors.getBackgroundColor())
             .build()
 
