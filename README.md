@@ -2,7 +2,8 @@
 An android library that helps in creating a letter avatar as bitmap to use as a placeholder for profile.
 Includes customisation like setting colors to Background and letter , you can also set your custom color pairs to choose randomly
 
-<img height="300" src="pictures/Screenshot_20240305_233943.png" width="120"/>
+<img height="300" src="pictures/Screenshot_20240901_225018.png" width="120"/>
+<img height="300" src="pictures/Screenshot_20240901_230104.png" width="120"/>
 
 ## Installation
 To include LetterAvatarGenerator dependency you need to add JitPack as repository in `settings.gradle.kts`
@@ -24,6 +25,8 @@ Add the following dependency to your gradle file.
 ```gradle
 implementation 'com.github.Pranathi-pellakuru:LetterAvatarGenerator:VERSION'
 ```
+
+**NOTE:** Here Color class is from android.graphics library
 
 ## How to Use
 
