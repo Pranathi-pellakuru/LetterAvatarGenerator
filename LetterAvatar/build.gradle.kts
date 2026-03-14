@@ -2,6 +2,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     id("maven-publish")
+    id("org.jetbrains.compose")
 }
 
 kotlin {
@@ -16,30 +17,35 @@ kotlin {
 
     jvm()
 
-    // iOS targets
     iosX64()
     iosArm64()
     iosSimulatorArm64()
 
     sourceSets {
-        val commonMain by getting
-        val commonTest by getting
-        val androidMain by getting
-        val androidUnitTest by getting
+        val commonMain by getting {
+            dependencies {
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.ui)
+                implementation(compose.material3)
+            }
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+                implementation("androidx.core:core-ktx:1.12.0")
+                implementation("com.google.android.material:material:1.11.0")
+            }
+        }
         val jvmMain by getting
         val jvmTest by getting
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
-
-        androidMain.dependencies {
-            implementation("androidx.core:core-ktx:1.12.0")
-            implementation("com.google.android.material:material:1.11.0")
-        }
-
-        commonTest.dependencies {
-            implementation(kotlin("test"))
-        }
     }
 }
 
@@ -77,7 +83,6 @@ afterEvaluate {
         publications {
             create<MavenPublication>("release") {
                 from(components["release"])
-
                 groupId = "com.github.Pranathi-pellakuru"
                 artifactId = "Letter-Avatar-Generator"
                 version = "1.0"
