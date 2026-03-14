@@ -25,11 +25,6 @@ interface AvatarCreatorInterface {
 }
 
 /**
- * Common implementation with shared logic.
- */
-expect class AvatarCreator : AvatarCreatorInterface
-
-/**
  * Default font for the platform.
  */
 expect fun defaultFont(): PlatformTypeface
