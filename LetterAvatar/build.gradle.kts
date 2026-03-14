@@ -1,7 +1,46 @@
 plugins {
+    kotlin("multiplatform")
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
     id("maven-publish")
+}
+
+kotlin {
+    androidTarget {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
+        }
+        publishLibraryVariants("release", "debug")
+    }
+
+    jvm()
+
+    // iOS targets
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
+    sourceSets {
+        val commonMain by getting
+        val commonTest by getting
+        val androidMain by getting
+        val androidUnitTest by getting
+        val jvmMain by getting
+        val jvmTest by getting
+        val iosX64Main by getting
+        val iosArm64Main by getting
+        val iosSimulatorArm64Main by getting
+
+        androidMain.dependencies {
+            implementation("androidx.core:core-ktx:1.12.0")
+            implementation("com.google.android.material:material:1.11.0")
+        }
+
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
+    }
 }
 
 android {
@@ -10,7 +49,6 @@ android {
 
     defaultConfig {
         minSdk = 24
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -28,21 +66,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
+
+    publishing {
+        singleVariant("release")
     }
-}
-
-dependencies {
-
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("com.google.android.material:material:1.11.0")
 }
 
 afterEvaluate {
     publishing {
         publications {
-            create<MavenPublication>("release"){
+            create<MavenPublication>("release") {
                 from(components["release"])
 
                 groupId = "com.github.Pranathi-pellakuru"
@@ -52,4 +85,3 @@ afterEvaluate {
         }
     }
 }
-

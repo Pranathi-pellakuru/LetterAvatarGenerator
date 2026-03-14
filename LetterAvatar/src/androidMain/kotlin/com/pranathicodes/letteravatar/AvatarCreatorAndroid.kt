@@ -2,50 +2,65 @@ package com.pranathicodes.letteravatar
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Bitmap.Config.ARGB_8888
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.text.TextPaint
 
-class AvatarCreator(private val context: Context) {
+/**
+ * Android-specific implementation of PlatformBitmap.
+ */
+actual typealias PlatformBitmap = Bitmap
+
+/**
+ * Android-specific implementation of PlatformTypeface.
+ */
+actual typealias PlatformTypeface = Typeface
+
+/**
+ * Returns the default font for Android.
+ */
+actual fun defaultFont(): PlatformTypeface = Typeface.SANS_SERIF
+
+/**
+ * Android implementation of AvatarCreator.
+ */
+actual class AvatarCreator(private val context: Context) : AvatarCreatorInterface {
 
     private var textSize = 25
     private var size = 180
     private var name = ' '
-    private var font = Typeface.SANS_SERIF
-    private var letterColor = Color.WHITE
-    private var backgroundColor = Color.GRAY
+    private var font: PlatformTypeface = defaultFont()
+    private var letterColor: Int = Colors.WHITE
+    private var backgroundColor: Int = Colors.GRAY
 
-
-    fun setTextSize(textSize: Int) = apply {
+    override fun setTextSize(textSize: Int) = apply {
         this.textSize = textSize
     }
 
-    fun setAvatarSize(int: Int) = apply {
-        this.size = int
+    override fun setAvatarSize(size: Int) = apply {
+        this.size = size
     }
 
-    fun setLetter(label: Char) = apply {
-        this.name = label
+    override fun setLetter(letter: Char) = apply {
+        this.name = letter
     }
 
-    fun setFont(fontFamily: Typeface) = apply {
-        this.font = fontFamily
+    override fun setFont(font: PlatformTypeface) = apply {
+        this.font = font
     }
 
-    fun setLetterColor(color: Int) = apply {
+    override fun setLetterColor(color: Int) = apply {
         this.letterColor = color
     }
 
-    fun setBackgroundColor(color: Int) = apply {
+    override fun setBackgroundColor(color: Int) = apply {
         this.backgroundColor = color
     }
 
-    fun build(): Bitmap {
+    override fun build(): PlatformBitmap {
         return avatarImageGenerate(
             size,
             name.toString(),
@@ -70,7 +85,7 @@ class AvatarCreator(private val context: Context) {
         painter.color = backgroundColor
 
         val areaRect = Rect(0, 0, size, size)
-        val bitmap = Bitmap.createBitmap(size, size, ARGB_8888)
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
         val bounds = RectF(areaRect)
@@ -83,7 +98,6 @@ class AvatarCreator(private val context: Context) {
         canvas.drawRect(areaRect, painter)
         canvas.drawText(label, bounds.left, bounds.top - textPaint.ascent(), textPaint)
         return bitmap
-
     }
 
     private fun textPainter(color: Int, typeface: Typeface, textSize: Int): TextPaint {
@@ -93,6 +107,4 @@ class AvatarCreator(private val context: Context) {
         textPaint.typeface = typeface
         return textPaint
     }
-
 }
-
