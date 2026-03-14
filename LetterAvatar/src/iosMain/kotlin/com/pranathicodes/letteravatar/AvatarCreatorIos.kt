@@ -23,6 +23,8 @@ import platform.UIKit.NSTextAlignmentCenter
 import platform.UIKit.boundingRectWithSize
 import platform.UIKit.drawInRect
 import platform.UIKit.UIColor
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.useContents
 
 /**
  * iOS-specific implementation of PlatformBitmap using CGImage.
@@ -113,6 +115,7 @@ actual class AvatarCreator : AvatarCreatorInterface {
         )
     }
 
+    @OptIn(ExperimentalForeignApi::class)
     private fun avatarImageGenerate(
         size: Int,
         name: String,
