@@ -1,108 +1,118 @@
 # Letter Avatar Generator
-An android library that helps in creating a letter avatar as bitmap to use as a placeholder for profile.
-Includes customisation like setting colors to Background and letter , you can also set your custom color pairs to choose randomly
+
+A **Kotlin Multiplatform** library that helps in creating letter avatars as `ImageBitmap` objects for profile placeholders. Built with **Compose Multiplatform**, it provides a consistent, high-performance rendering engine that works identically across **Android**, **iOS**, and other Compose targets.
+
+The library handles text measuring, centering, and scaling automatically using a shared implementation in `commonMain`, ensuring your avatars look the same on every device.
 
 <img height="300" src="pictures/Screenshot_20240901_225018.png" width="120"/>
 <img height="300" src="pictures/Screenshot_20240901_230104.png" width="120"/>
 
-## Installation
-To include LetterAvatarGenerator dependency you need to add JitPack as repository in `settings.gradle.kts`
+## Features
 
-```gradle
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-       google()
-       mavenCentral()
-       maven {
-             setUrl("https://jitpack.io")
-       }
-    }
+- **Pure Compose Rendering**: Uses `CanvasDrawScope` and `TextMeasurer` for platform-agnostic drawing.
+- **ImageBitmap Output**: Returns a standard Compose `ImageBitmap` directly.
+- **Resource Integration**: Easily use custom fonts from `composeResources` via `FontFamily`.
+- **Consistent Scaling**: Text size is defined as a percentage of the avatar size.
+
+## Installation
+
+[![](https://jitpack.io/v/Pranathi-pellakuru/LetterAvatarGenerator.svg)](https://jitpack.io/#Pranathi-pellakuru/LetterAvatarGenerator)
+
+### Gradle (Kotlin DSL)
+
+Add the dependency to your module's `build.gradle.kts`:
+
+```kotlin
+repositories {
+    mavenCentral()
+    google()
+    maven { url = uri("https://jitpack.io") }
+}
+
+dependencies {
+    implementation("com.github.Pranathi-pellakuru:LetterAvatarGenerator:v1.2")
 }
 ```
 
-Add the following dependency to your gradle file.
-```gradle
-implementation 'com.github.Pranathi-pellakuru:LetterAvatarGenerator:VERSION'
-```
+## Usage in Compose Multiplatform
 
-**NOTE:** Here Color class is from android.graphics library
-
-## How to Use
-
-Avatar creator class
+The library provides a simple API to build avatars directly in your Composable functions.
 
 ```kotlin
-val image = AvatarCreator(this).setLetter('U')
-    .setTextSize(25)
-    .setAvatarSize(180)
-    .setLetterColor(Color.GRAY)
-    .setBackgroundColor(Color.BLACK)
-    .build()
-```
+import androidx.compose.ui.graphics.Color
+import com.pranathicodes.letteravatar.rememberAvatarCreator
 
-### To customize colors 
-
-**If you have color pairs**
-
-```kotlin
-val randomColors = RandomColors()
-randomColors.setColorPairs(listOf(Pair(Color.WHITE,Color.CYAN), Pair(Color.MAGENTA,Color.RED), Pair(Color.GRAY,Color.BLACK)))
-val colorPair = randomColors.getColorPair()
-val image = AvatarCreator(this).setLetter('P')
-     .setLetterColor(colorPair.first)
-     .setBackgroundColor(colorPair.second)
-     .build()
-```
-
-**different set of colors for background and letter**
-```kotlin
-val randomColors = RandomColors()
-randomColors.setLetterColors(listOf(Color.WHITE,Color.MAGENTA,Color.GRAY))
-randomColors.setBackgroundColors(listOf(Color.CYAN,Color.RED,Color.BLACK))
-val image1 = AvatarCreator(this).setLetter('P')
-    .setLetterColor(randomColors.getLetterColor())
-    .setBackgroundColor(randomColors.getBackgroundColor())
-    .build()
-
-```
-
-### To customize font
-
-use the function setFont(typeface:Typeface) to which you can pass the font in your resource folder as below
-```kotlin
-val image = AvatarCreator(this)
+@Composable
+fun MyAvatar() {
+    // 1. Get the shared creator (automatically uses local Density and TextMeasurer)
+    val avatarCreator = rememberAvatarCreator()
+    
+    // 2. Build the avatar (returns ImageBitmap)
+    val avatarBitmap = remember(avatarCreator) {
+        avatarCreator
             .setLetter('P')
-            .setLetterColor(randomColors.getLetterColor())
-            .setFont(this.resources.getFont(R.font.micro_extend_flf_bold))
-            .setBackgroundColor(randomColors.getBackgroundColor())
+            .setAvatarSize(180) // Size in dp-equivalent pixels
+            .setTextSize(45)    // Text height as 45% of avatar size
+            .setLetterColor(Color.White)
+            .setBackgroundColor(Color(0xFFFF5722))
             .build()
+    }
+
+    // 3. Display using standard Compose Image
+    Image(
+        bitmap = avatarBitmap,
+        contentDescription = "User Avatar"
+    )
+}
 ```
 
-## Displaying the generated bitmap
+## Customization
 
-**Jetpack compose**
+### Fonts
+
+You can use custom fonts from your resources seamlessly:
+
 ```kotlin
-Image(
-    bitmap = AvatarCreator(this).setLetter('U')
-        .setLetterColor(Color.GRAY)
-        .setBackgroundColor(Color.BLACK)
-        .build()
-        .asImageBitmap(),
-    contentDescription = "",
-    modifier = Modifier.size(200.dp),
-    contentScale = ContentScale.FillWidth
-)
-```
-**ImageView**
-```Kotlin
-imageView.setImageDrawable(
-    AvatarCreator(this).setLetter('U')
-        .setLetterColor(Color.GRAY)
-        .setBackgroundColor(Color.BLACK)
-        .build()
-        )
+val myFontFamily = FontFamily(Font(Res.font.my_custom_font))
+
+avatarCreator.setFontFamily(myFontFamily)
 ```
 
-## Reference 
-https://github.com/AmosKorir/AvatarImageGenerator
+### Random Colors
+
+The library includes a `RandomColors` helper to manage color palettes using Compose `Color`:
+
+```kotlin
+val randomColors = RandomColors().apply {
+    setColorPairs(listOf(Color.White to Color.Blue, Color.Yellow to Color.Black))
+}
+
+// Pick a random pair
+val pair = randomColors.getColorPair()
+
+avatarCreator
+    .setLetterColor(pair.first)
+    .setBackgroundColor(pair.second)
+```
+
+## API Reference
+
+### AvatarCreator
+
+| Method | Description |
+|--------|-------------|
+| `setLetter(letter: Char)` | Sets the letter to display |
+| `setTextSize(percentage: Int)` | Sets text height as a % of avatar size (0-100, default: 40) |
+| `setAvatarSize(size: Int)` | Sets output image size in pixels (default: 180) |
+| `setLetterColor(color: Color)` | Sets the letter color |
+| `setBackgroundColor(color: Color)` | Sets the background color |
+| `setFontFamily(family: FontFamily)`| Sets a custom `FontFamily` |
+| `build()` | Returns `ImageBitmap` |
+
+### Compose Extensions
+
+- `rememberAvatarCreator()`: Composable function that provides a pre-configured creator using the current `LocalDensity` and `TextMeasurer`.
+
+## License
+
+This project is licensed under the MIT License.
