@@ -16,7 +16,7 @@ The library handles text measuring, centering, and scaling automatically using a
 
 ## Installation
 
-[![](https://jitpack.io/v/Pranathi-pellakuru/LetterAvatarGenerator.svg)](https://jitpack.io/#Pranathi-pellakuru/LetterAvatarGenerator)
+The library is available on **Maven Central**.
 
 ### Gradle (Kotlin DSL)
 
@@ -26,11 +26,10 @@ Add the dependency to your module's `build.gradle.kts`:
 repositories {
     mavenCentral()
     google()
-    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
-    implementation("com.github.Pranathi-pellakuru:LetterAvatarGenerator:v1.2")
+    implementation("io.github.pranathi-pellakuru:Letter-Avatar-Generator:1.2.0")
 }
 ```
 

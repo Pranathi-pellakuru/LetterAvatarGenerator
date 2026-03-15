@@ -1,8 +1,12 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
     id("maven-publish")
     id("org.jetbrains.compose")
+    kotlin("plugin.compose")
+    id("com.vanniktech.maven.publish") version "0.28.0"
 }
 
 kotlin {
@@ -87,15 +91,42 @@ android {
     }
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                from(components["release"])
-                groupId = "com.github.Pranathi-pellakuru"
-                artifactId = "Letter-Avatar-Generator"
-                version = "1.1"
+mavenPublishing {
+    // Define coordinates for the published artifact
+    coordinates(
+        groupId = "io.github.pranathi-pellakuru",
+        artifactId = "Letter-Avatar-Generator",
+        version = "1.2.0"
+    )
+
+    // Configure POM metadata for the published artifact
+    pom {
+        name.set("KMP Library for creating Letter Avatar")
+        description.set("This library can be used by Android and iOS targets creating letter avatars which even can be uploaded to backend to use as default profile picture")
+        url.set("https://github.com/Pranathi-pellakuru/LetterAvatarGenerator")
+
+        licenses {
+            license {
+                name.set("MIT")
+                url.set("https://opensource.org/licenses/MIT")
             }
         }
+
+        // Specify developer information
+        developers {
+            developer {
+                id.set("pranathi-pellakuru")
+                name.set("Pranathi Pellakuru")
+                email.set("pranathipellakuru@gmail.com")
+            }
+        }
+
+        scm {
+            url.set("https://github.com/Pranathi-pellakuru/LetterAvatarGenerator")
+        }
     }
+
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+
+    signAllPublications()
 }
