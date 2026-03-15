@@ -5,9 +5,6 @@ plugins {
     id("org.jetbrains.compose")
 }
 
-group = "com.github.Pranathi-pellakuru"
-version = "1.2"
-
 kotlin {
     androidTarget {
         compilations.all {
@@ -63,7 +60,7 @@ kotlin {
 
 android {
     namespace = "com.pranathicodes.letteravatar"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24
@@ -90,15 +87,15 @@ android {
     }
 }
 
-//afterEvaluate {
-//    publishing {
-//        publications {
-//            create<MavenPublication>("release") {
-//                from(components["release"])
-//                groupId = "com.github.Pranathi-pellakuru"
-//                artifactId = "Letter-Avatar-Generator"
-//                version = "1.1"
-//            }
-//        }
-//    }
-//}
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                groupId = "com.github.Pranathi-pellakuru"
+                artifactId = "Letter-Avatar-Generator"
+                version = "1.1"
+            }
+        }
+    }
+}
