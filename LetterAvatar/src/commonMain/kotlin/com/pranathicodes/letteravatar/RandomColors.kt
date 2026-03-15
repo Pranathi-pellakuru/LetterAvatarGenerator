@@ -1,35 +1,37 @@
 package com.pranathicodes.letteravatar
 
+import androidx.compose.ui.graphics.Color
+
 /**
  * Cross-platform class for managing random colors.
- * Works with Int color values (ARGB format).
+ * Works with Compose Color values.
  */
 class RandomColors {
-    private var colorPairs: List<Pair<Int, Int>> = listOf()
-    private var letterColors: List<Int> = listOf()
-    private var backgroundColors: List<Int> = listOf()
+    private var colorPairs: List<Pair<Color, Color>> = listOf()
+    private var letterColors: List<Color> = listOf()
+    private var backgroundColors: List<Color> = listOf()
 
-    fun getColorPair(): Pair<Int, Int> {
+    fun getColorPair(): Pair<Color, Color> {
         return colorPairs.random()
     }
 
-    fun setColorPairs(colors: List<Pair<Int, Int>>) {
+    fun setColorPairs(colors: List<Pair<Color, Color>>) {
         colorPairs = colors
     }
 
-    fun setLetterColors(colors: List<Int>) {
+    fun setLetterColors(colors: List<Color>) {
         letterColors = colors
     }
 
-    fun setBackgroundColors(colors: List<Int>) {
+    fun setBackgroundColors(colors: List<Color>) {
         backgroundColors = colors
     }
 
-    fun getLetterColor(): Int {
+    fun getLetterColor(): Color {
         return letterColors.random()
     }
 
-    fun getBackgroundColor(): Int {
+    fun getBackgroundColor(): Color {
         return backgroundColors.random()
     }
 }

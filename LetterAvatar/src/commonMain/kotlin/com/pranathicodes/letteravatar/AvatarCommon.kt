@@ -1,12 +1,21 @@
 package com.pranathicodes.letteravatar
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
-
-/**
- * Platform-agnostic representation of an image/bitmap.
- * Platform implementations will wrap their native image types.
- */
-expect class PlatformBitmap
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.sp
 
 /**
  * Interface for creating letter avatars across platforms.
@@ -25,21 +34,24 @@ interface AvatarCreatorInterface {
      */
     fun setFontFamily(fontFamily: FontFamily): AvatarCreatorInterface
     
-    fun setLetterColor(color: Int): AvatarCreatorInterface
-    fun setBackgroundColor(color: Int): AvatarCreatorInterface
-    fun build(): PlatformBitmap
+    fun setLetterColor(color: Color): AvatarCreatorInterface
+    fun setBackgroundColor(color: Color): AvatarCreatorInterface
+    fun build(): ImageBitmap
 }
 
 /**
- * Shared implementation that avoids duplicated state and builder methods.
+ * Common implementation using Compose Canvas and DrawScope.
  */
-abstract class AvatarCreatorBase : AvatarCreatorInterface {
-    protected var textSize = 40
-    protected var size = 180
-    protected var name = ' '
-    protected var fontFamily: FontFamily? = null
-    protected var letterColor: Int = Colors.WHITE
-    protected var backgroundColor: Int = Colors.GRAY
+class AvatarCreator(
+    private val textMeasurer: TextMeasurer,
+    private val density: Density
+) : AvatarCreatorInterface {
+    private var textSize = 40
+    private var size = 180
+    private var name = ' '
+    private var fontFamily: FontFamily? = null
+    private var letterColor: Color = Color.White
+    private var backgroundColor: Color = Color.Gray
 
     override fun setTextSize(textSize: Int): AvatarCreatorInterface {
         this.textSize = textSize
@@ -61,50 +73,57 @@ abstract class AvatarCreatorBase : AvatarCreatorInterface {
         return this
     }
 
-    override fun setLetterColor(color: Int): AvatarCreatorInterface {
+    override fun setLetterColor(color: Color): AvatarCreatorInterface {
         this.letterColor = color
         return this
     }
 
-    override fun setBackgroundColor(color: Int): AvatarCreatorInterface {
+    override fun setBackgroundColor(color: Color): AvatarCreatorInterface {
         this.backgroundColor = color
         return this
     }
 
-    override fun build(): PlatformBitmap {
-        return avatarImageGenerate(
-            imageSize = size,
-            name = name.toString(),
-            textSize = textSize,
-            fontFamily = fontFamily,
-            letterColor = letterColor,
-            backgroundColor = backgroundColor,
-            density = imageDensity()
-        )
+    override fun build(): ImageBitmap {
+        val label = name.uppercase().ifEmpty { "-" }.take(1)
+        val scaledSize = (size * density.density).toInt()
+        val imageBitmap = ImageBitmap(scaledSize, scaledSize)
+        val canvas = Canvas(imageBitmap)
+        
+        val drawScope = CanvasDrawScope()
+        val scaledTextSize = (size * (textSize / 100.0)).sp
+
+        drawScope.draw(
+            density = density,
+            layoutDirection = LayoutDirection.Ltr,
+            canvas = canvas,
+            size = Size(scaledSize.toFloat(), scaledSize.toFloat())
+        ) {
+            // Draw background
+            drawRect(color = backgroundColor)
+
+            // Measure and draw text
+            val textLayoutResult: TextLayoutResult = textMeasurer.measure(
+                text = AnnotatedString(label),
+                style = TextStyle(
+                    color = letterColor,
+                    fontSize = scaledTextSize,
+                    fontFamily = fontFamily
+                ),
+                constraints = Constraints(
+                    maxWidth = scaledSize,
+                    maxHeight = scaledSize
+                )
+            )
+
+            val xPos = (scaledSize - textLayoutResult.size.width) / 2f
+            val yPos = (scaledSize - textLayoutResult.size.height) / 2f
+
+            drawText(
+                textLayoutResult = textLayoutResult,
+                topLeft = Offset(xPos, yPos)
+            )
+        }
+
+        return imageBitmap
     }
-
-    protected open fun imageDensity(): Double = 1.0
-
-    protected abstract fun avatarImageGenerate(
-        imageSize: Int,
-        name: String,
-        textSize: Int,
-        fontFamily: FontFamily?,
-        letterColor: Int,
-        backgroundColor: Int,
-        density: Double
-    ): PlatformBitmap
-}
-
-/**
- * Platform-specific avatar creator implementation.
- */
-expect class AvatarCreator : AvatarCreatorBase
-
-/**
- * Color constants for common colors.
- */
-object Colors {
-    const val WHITE: Int = 0xFFFFFFFF.toInt()
-    const val GRAY: Int = 0xFF808080.toInt()
 }

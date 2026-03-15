@@ -1,15 +1,16 @@
 package com.pranathicodes.letteravatar
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 
 /**
  * Common entry point for using AvatarCreator in Compose Multiplatform.
  */
 @Composable
-expect fun rememberAvatarCreator(): AvatarCreatorInterface
-
-/**
- * Extension to convert platform bitmap to Compose-friendly ImageBitmap.
- */
-expect fun PlatformBitmap.asImageBitmap(): ImageBitmap
+fun rememberAvatarCreator(): AvatarCreatorInterface {
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    return remember(textMeasurer, density) { AvatarCreator(textMeasurer, density) }
+}
