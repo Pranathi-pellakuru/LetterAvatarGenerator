@@ -8,6 +8,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
         maven {
@@ -17,5 +18,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "LetterAvatarGenerator"
-include(":app")
 include(":LetterAvatar")

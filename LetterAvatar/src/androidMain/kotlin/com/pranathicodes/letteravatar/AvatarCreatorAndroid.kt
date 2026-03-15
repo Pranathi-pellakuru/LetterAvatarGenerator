@@ -4,10 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.RectF
 import android.graphics.Typeface
 import android.text.TextPaint
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 
 /**
  * Android-specific implementation of PlatformBitmap.
@@ -15,96 +16,61 @@ import android.text.TextPaint
 actual typealias PlatformBitmap = Bitmap
 
 /**
- * Android-specific implementation of PlatformTypeface.
- */
-actual typealias PlatformTypeface = Typeface
-
-/**
- * Returns the default font for Android.
- */
-actual fun defaultFont(): PlatformTypeface = Typeface.SANS_SERIF
-
-/**
  * Android implementation of AvatarCreator.
  */
-actual class AvatarCreator(private val context: Context) : AvatarCreatorInterface {
+actual class AvatarCreator(private val context: Context) : AvatarCreatorBase() {
 
-    private var textSize = 25
-    private var size = 180
-    private var name = ' '
-    private var font: PlatformTypeface = defaultFont()
-    private var letterColor: Int = Colors.WHITE
-    private var backgroundColor: Int = Colors.GRAY
-
-    override fun setTextSize(textSize: Int) = apply {
-        this.textSize = textSize
-    }
-
-    override fun setAvatarSize(size: Int) = apply {
-        this.size = size
-    }
-
-    override fun setLetter(letter: Char) = apply {
-        this.name = letter
-    }
-
-    override fun setFont(font: PlatformTypeface) = apply {
-        this.font = font
-    }
-
-    override fun setLetterColor(color: Int) = apply {
-        this.letterColor = color
-    }
-
-    override fun setBackgroundColor(color: Int) = apply {
-        this.backgroundColor = color
-    }
-
-    override fun build(): PlatformBitmap {
-        return avatarImageGenerate(
-            size,
-            name.toString(),
-            textSize,
-            font,
-            letterColor,
-            backgroundColor
-        )
-    }
-
-    private fun avatarImageGenerate(
-        size: Int,
+    override fun avatarImageGenerate(
+        imageSize: Int,
         name: String,
         textSize: Int,
-        typeface: Typeface,
+        fontFamily: FontFamily?,
         letterColor: Int,
-        backgroundColor: Int
-    ): Bitmap {
-        val painter = Paint()
-        val label = name.uppercase().ifEmpty { "-" }
-        val textPaint = textPainter(letterColor, typeface, textSize)
-        painter.color = backgroundColor
+        backgroundColor: Int,
+        density: Double,
+    ): PlatformBitmap {
+        val label = name.uppercase().ifEmpty { "-" }.take(1)
 
-        val areaRect = Rect(0, 0, size, size)
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val scaledSize = (imageSize * density).toInt()
+        val scaledTextSize = (scaledSize * (textSize / 100.0)).toFloat()
+
+        val bitmap = Bitmap.createBitmap(scaledSize, scaledSize, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        val bounds = RectF(areaRect)
-        bounds.right = textPaint.measureText(label, 0, 1)
-        bounds.bottom = textPaint.descent() - textPaint.ascent()
+        // Draw background
+        val bgPaint = Paint().apply {
+            color = backgroundColor
+            style = Paint.Style.FILL
+        }
+        canvas.drawRect(0f, 0f, scaledSize.toFloat(), scaledSize.toFloat(), bgPaint)
 
-        bounds.left += (areaRect.width() - bounds.right) / 2.0f
-        bounds.top += (areaRect.height() - bounds.bottom) / 2.0f
+        // Resolve Typeface from FontFamily
+        val typeface = if (fontFamily != null) {
+            val resolver = androidx.compose.ui.text.font.createFontFamilyResolver(context)
+            val resolved = resolver.resolve(
+                fontFamily = fontFamily,
+                fontWeight = FontWeight.Normal,
+                fontStyle = FontStyle.Normal
+            )
+            resolved.value as Typeface
+        } else {
+            Typeface.SANS_SERIF
+        }
 
-        canvas.drawRect(areaRect, painter)
-        canvas.drawText(label, bounds.left, bounds.top - textPaint.ascent(), textPaint)
+        // Draw text
+        val textPaint = TextPaint().apply {
+            color = letterColor
+            this.typeface = typeface
+            this.textSize = scaledTextSize
+            isAntiAlias = true
+            textAlign = Paint.Align.CENTER
+        }
+
+        val xPos = scaledSize / 2f
+        val yPos = (scaledSize / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f)
+
+        canvas.drawText(label, xPos, yPos, textPaint)
+
         return bitmap
-    }
-
-    private fun textPainter(color: Int, typeface: Typeface, textSize: Int): TextPaint {
-        val textPaint = TextPaint()
-        textPaint.textSize = textSize * context.resources.displayMetrics.density
-        textPaint.color = color
-        textPaint.typeface = typeface
-        return textPaint
     }
 }

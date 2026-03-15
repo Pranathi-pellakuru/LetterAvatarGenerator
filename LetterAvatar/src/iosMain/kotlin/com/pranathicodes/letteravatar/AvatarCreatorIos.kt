@@ -1,49 +1,32 @@
 package com.pranathicodes.letteravatar
 
-import platform.CoreGraphics.CGBitmapContextCreate
-import platform.CoreGraphics.CGBitmapContextCreateImage
-import platform.CoreGraphics.CGContextFillRect
-import platform.CoreGraphics.CGContextRelease
-import platform.CoreGraphics.CGContextSetRGBFillColor
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.CoreGraphics.CGImageRef
 import platform.CoreGraphics.CGRectMake
-import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
-import platform.CoreGraphics.kCGImageAlphaPremultipliedLast
-import platform.CoreGraphics.CGContextSetShouldAntialias
 import platform.CoreGraphics.CGSizeMake
-import platform.UIKit.UIFont
-import platform.Foundation.NSAttributedString
+import platform.Foundation.NSString
 import platform.UIKit.NSFontAttributeName
 import platform.UIKit.NSForegroundColorAttributeName
-import platform.UIKit.NSParagraphStyleAttributeName
 import platform.UIKit.NSMutableParagraphStyle
-import platform.UIKit.NSStringDrawingUsesFontLeading
-import platform.UIKit.NSStringDrawingUsesLineFragmentOrigin
+import platform.UIKit.NSParagraphStyleAttributeName
 import platform.UIKit.NSTextAlignmentCenter
-import platform.UIKit.boundingRectWithSize
-import platform.UIKit.drawInRect
 import platform.UIKit.UIColor
-import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.useContents
+import platform.UIKit.UIFont
+import platform.UIKit.UIGraphicsBeginImageContextWithOptions
+import platform.UIKit.UIGraphicsEndImageContext
+import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
+import platform.UIKit.UIRectFill
+import platform.UIKit.drawInRect
 
 /**
- * iOS-specific implementation of PlatformBitmap using CGImage.
+ * iOS-specific implementation of PlatformBitmap wrapping CGImage.
  */
-actual typealias PlatformBitmap = CGImageRef
+@OptIn(ExperimentalForeignApi::class)
+actual class PlatformBitmap(val cgImage: CGImageRef)
 
-/**
- * iOS-specific implementation of PlatformTypeface using UIFont.
- */
-actual typealias PlatformTypeface = UIFont
-
-/**
- * Returns the default font for iOS (system font).
- */
-actual fun defaultFont(): PlatformTypeface = UIFont.systemFontOfSize(17.0)
-
-/**
- * Helper extension to extract RGBA components from Int color (ARGB format).
- */
 private fun Int.toRGBComponents(): Triple<Double, Double, Double> {
     val red = ((this shr 16) and 0xFF) / 255.0
     val green = ((this shr 8) and 0xFF) / 255.0
@@ -51,116 +34,62 @@ private fun Int.toRGBComponents(): Triple<Double, Double, Double> {
     return Triple(red, green, blue)
 }
 
-/**
- * Helper to get alpha component from Int color.
- */
-private fun Int.toAlpha(): Double {
-    return ((this shr 24) and 0xFF) / 255.0
-}
+private fun Int.toAlpha(): Double = ((this shr 24) and 0xFF) / 255.0
 
-/**
- * iOS implementation of AvatarCreator using CoreGraphics.
- */
-actual class AvatarCreator : AvatarCreatorInterface {
+actual class AvatarCreator : AvatarCreatorBase() {
 
-    private var textSize = 25
-    private var size = 180
-    private var name = ' '
-    private var font: PlatformTypeface = defaultFont()
-    private var letterColor: Int = Colors.WHITE
-    private var backgroundColor: Int = Colors.GRAY
-    private var density: Double = 1.0
+    protected var density: Double = 1.0
 
-    /**
-     * Set the display density for scaling text size.
-     * Default is 1.0, on iOS you may want to use UIScreen.mainScreen.scale
-     */
     fun setDensity(density: Double) = apply {
         this.density = density
     }
 
-    override fun setTextSize(textSize: Int) = apply {
-        this.textSize = textSize
-    }
-
-    override fun setAvatarSize(size: Int) = apply {
-        this.size = size
-    }
-
-    override fun setLetter(letter: Char) = apply {
-        this.name = letter
-    }
-
-    override fun setFont(font: PlatformTypeface) = apply {
-        this.font = font
-    }
-
-    override fun setLetterColor(color: Int) = apply {
-        this.letterColor = color
-    }
-
-    override fun setBackgroundColor(color: Int) = apply {
-        this.backgroundColor = color
-    }
-
-    override fun build(): PlatformBitmap {
-        return avatarImageGenerate(
-            size,
-            name.toString(),
-            textSize,
-            font,
-            letterColor,
-            backgroundColor,
-            density
-        )
-    }
+    override fun imageDensity(): Double = density
 
     @OptIn(ExperimentalForeignApi::class)
-    private fun avatarImageGenerate(
-        size: Int,
+    override fun avatarImageGenerate(
+        imageSize: Int,
         name: String,
         textSize: Int,
-        font: UIFont,
+        fontFamily: FontFamily?,
         letterColor: Int,
         backgroundColor: Int,
-        density: Double
-    ): CGImageRef {
+        density: Double,
+    ): PlatformBitmap {
         val label = name.uppercase().ifEmpty { "-" }.take(1)
-        val scaledSize = (size * density).toInt()
+        val size = imageSize.toDouble()
 
-        // Create bitmap context
-        val colorSpace = CGColorSpaceCreateDeviceRGB()
-        val context = CGBitmapContextCreate(
-            null,
-            scaledSize.toULong(),
-            scaledSize.toULong(),
-            8u, // bits per component
-            0u, // bytes per row (0 = automatic)
-            colorSpace,
-            kCGImageAlphaPremultipliedLast
-        ) ?: throw IllegalStateException("Failed to create bitmap context")
+        // Use UIKit image context which handles coordinate system and scaling correctly.
+        UIGraphicsBeginImageContextWithOptions(CGSizeMake(size, size), false, density)
 
-        // Enable anti-aliasing
-        CGContextSetShouldAntialias(context, true)
-
-        // Fill background
+        // Draw background
         val bgComponents = backgroundColor.toRGBComponents()
-        val bgAlpha = backgroundColor.toAlpha()
-        CGContextSetRGBFillColor(
-            context,
+        val bgColor = UIColor.colorWithRed(
             bgComponents.first,
             bgComponents.second,
             bgComponents.third,
-            bgAlpha
+            backgroundColor.toAlpha()
         )
-        CGContextFillRect(
-            context,
-            CGRectMake(0.0, 0.0, scaledSize.toDouble(), scaledSize.toDouble())
-        )
+        bgColor.setFill()
+        UIRectFill(CGRectMake(0.0, 0.0, size, size))
 
-        // Prepare text attributes
-        val scaledFontSize = textSize * density
-        val textFont = font.fontWithSize(scaledFontSize)
+        // Calculate text size as a percentage of the image size
+        val scaledTextSize = size * (textSize / 100.0)
+
+        // Resolve UIFont from FontFamily
+        val resolvedFont = if (fontFamily != null) {
+            val resolver = androidx.compose.ui.text.font.createFontFamilyResolver()
+            val resolved = resolver.resolve(
+                fontFamily = fontFamily,
+                fontWeight = FontWeight.Normal,
+                fontStyle = FontStyle.Normal
+            )
+            val uiFont = resolved.value as? UIFont
+            uiFont?.fontWithSize(scaledTextSize) ?: UIFont.systemFontOfSize(scaledTextSize)
+        } else {
+            UIFont.systemFontOfSize(scaledTextSize)
+        }
+
         val fgComponents = letterColor.toRGBComponents()
         val fgColor = UIColor.colorWithRed(
             fgComponents.first,
@@ -169,41 +98,28 @@ actual class AvatarCreator : AvatarCreatorInterface {
             letterColor.toAlpha()
         )
 
-        // Create paragraph style for center alignment
-        val paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = NSTextAlignmentCenter
+        val paragraphStyle = NSMutableParagraphStyle().apply {
+            setAlignment(NSTextAlignmentCenter)
+        }
 
-        // Create attributed string
         val attributes = mapOf<Any?, Any?>(
-            NSFontAttributeName to textFont,
+            NSFontAttributeName to resolvedFont,
             NSForegroundColorAttributeName to fgColor,
             NSParagraphStyleAttributeName to paragraphStyle
         )
 
-        val attributedString = NSAttributedString.create(label, attributes)
+        val estimatedTextHeight = resolvedFont.lineHeight
+        val y = (size - estimatedTextHeight) / 2.0
 
-        // Calculate text bounds
-        val textSizeCG = CGSizeMake(scaledSize.toDouble(), scaledSize.toDouble())
-        val options = NSStringDrawingUsesLineFragmentOrigin or NSStringDrawingUsesFontLeading
-        val textRect = attributedString.boundingRectWithSize(textSizeCG, options, null)
+        (label as NSString).drawInRect(
+            CGRectMake(0.0, y, size, estimatedTextHeight),
+            attributes
+        )
 
-        // Calculate centered position
-        val textWidth = textRect.useContents { size.width }
-        val textHeight = textRect.useContents { size.height }
-        val x = (scaledSize - textWidth) / 2.0
-        val y = (scaledSize - textHeight) / 2.0 - textRect.useContents { origin.y }
+        val uiImage = UIGraphicsGetImageFromCurrentImageContext()
+            ?: error("Failed to get image from context")
+        UIGraphicsEndImageContext()
 
-        // Draw text
-        val drawRect = CGRectMake(x, y, textWidth, textHeight)
-        attributedString.drawInRect(drawRect)
-
-        // Create CGImage from context
-        val cgImage = CGBitmapContextCreateImage(context)
-            ?: throw IllegalStateException("Failed to create CGImage")
-
-        // Clean up
-        CGContextRelease(context)
-
-        return cgImage
+        return PlatformBitmap(uiImage.CGImage!!)
     }
 }

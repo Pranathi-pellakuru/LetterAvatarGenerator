@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
-actual fun rememberAvatarCreator(): AvatarCreator {
+actual fun rememberAvatarCreator(): AvatarCreatorInterface {
     val context = LocalContext.current
     return remember(context) { AvatarCreator(context) }
 }
