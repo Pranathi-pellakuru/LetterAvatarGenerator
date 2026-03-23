@@ -112,6 +112,10 @@ avatarCreator
 
 - `rememberAvatarCreator()`: Composable function that provides a pre-configured creator using the current `LocalDensity` and `TextMeasurer`.
 
+## Reference 
+
+https://github.com/AmosKorir/AvatarImageGenerator
+
 ## License
 
 This project is licensed under the MIT License.
